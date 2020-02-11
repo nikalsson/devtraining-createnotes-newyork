@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($rootScope, $scope) {
+  /* widget controller */
+	var c = this;
+	var selectedNote;
+	c.selectItem = function(idx) {
+		selectedNote = c.data.notes[idx];
+		selectedNoteId = c.data.notes[idx].sys_id;
+		console.log('Note ID ' + selectedNoteId);
+		$rootScope.noteID = selectedNoteId;
+		$rootScope.$emit('selectNote', selectedNoteId);
+		return selectedNote;
+	}
+
+	// Update a note on the list after the body has been updated. Update only on client-side since the body client script already sends an update to the server.
+	$rootScope.$on('update', function(event, data) {
+		// Store the index of the selected note for updating it
+		var noteIndex = c.data.notes.indexOf(selectedNote);
+		// Shorten the note and update
+		c.data.notes[noteIndex].title = $rootScope.note.title;
+		c.data.notes[noteIndex].note = $rootScope.note.note.slice(0, 20);
+	});	
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css/>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>notes_list</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Notes list</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+	data.notes = [];
+	var noteGR = new GlideRecord('x_snc_createnotes_note');
+	noteGR.addQuery('user', gs.getUser().getID());
+	noteGR.orderByDesc('sys_created_on');
+	noteGR.query();
+
+	while (noteGR.next()) {
+		var noteObj = {};
+		$sp.getRecordDisplayValues(noteObj, noteGR, 'number, title, sys_id');
+		noteObj.note = noteGR.getValue('note').slice(0, 20);
+		data.notes.push(noteObj);
+	}
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2020-02-10 13:36:02</sys_created_on>
+        <sys_id>732c580fdb760010a278dde7489619a4</sys_id>
+        <sys_mod_count>42</sys_mod_count>
+        <sys_name>Notes list</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_widget_732c580fdb760010a278dde7489619a4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2020-02-11 08:02:14</sys_updated_on>
+        <template><![CDATA[<div class="panel panel-default">
+  <div class="panel-heading clearfix">
+    <h3 class="panel-title pull-left">
+      ${Notes}
+    </h3>
+  </div>
+  <div class="list-group">
+    <a class="list-group-item" ng-click="c.selectItem($index)" ng-repeat="note in data.notes">
+      <h4 class="list-group-item-heading" ng-model="c.data.title" ng-change="c.updateNote()">
+        {{note.title}}
+      </h4>
+      <p class="list-group-item-text"  ng-model="c.data.note" ng-change="c.updateNote()">
+        {{note.note}}
+      </p>
+    </a>
+  </div>
+</div>]]></template>
+    </sp_widget>
+</record_update>
